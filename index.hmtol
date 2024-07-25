@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar Factura</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            color: #fff;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .total {
+            font-size: 1.2em;
+            text-align: right;
+            margin-top: 20px;
+        }
+        .invoice {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Generar Factura</h1>
+        <form id="invoiceForm">
+            <div class="form-group">
+                <label for="name">Nombre y Apellido</label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="id">Cédula</label>
+                <input type="text" id="id" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Teléfono</label>
+                <input type="text" id="phone">
+            </div>
+
+            <h2>Combos</h2>
+            <div class="form-group">
+                <label for="combo1">Combo de 4 empanadas de carne - $2.50</label>
+                <input type="number" id="combo1" min="0" value="0">
+            </div>
+            <div class="form-group">
+                <label for="combo2">Combo de 6 empanadas especiales - $5.00</label>
+                <input type="number" id="combo2" min="0" value="0">
+            </div>
+            <div class="form-group">
+                <label for="combo3">Combo de empanada especial con calabresa y papas - $5.00</label>
+                <input type="number" id="combo3" min="0" value="0">
+            </div>
+            <div class="form-group">
+                <label for="combo4">Combo de 4 empanadas y refresco - $5.00</label>
+                <input type="number" id="combo4" min="0" value="0">
+            </div>
+
+            <h2>Individuales</h2>
+            <div class="form-group">
+                <label for="ind1">Empanada de carne - $1.00</label>
+                <input type="number" id="ind1" min="0" value="0">
+            </div>
+            <div class="form-group">
+                <label for="ind2">Empanada de queso - $1.00</label>
+                <input type="number" id="ind2" min="0" value="0">
+            </div>
+            <div class="form-group">
+                <label for="ind3">Empanada de pollo - $1.50</label>
+                <input type="number" id="ind3" min="0" value="0">
+            </div>
+            <div class="form-group">
+                <label for="ind4">Empanada Especial - $2.30</label>
+                <input type="number" id="ind4" min="0" value="0">
+            </div>
+            <div class="form-group">
+                <label for="ind5">Empanada de pabellón - $2.00</label>
+                <input type="number" id="ind5" min="0" value="0">
+            </div>
+
+            <h2>Refrescos</h2>
+            <div class="form-group">
+                <label for="drink1">Pepsi - $1.00</label>
+                <input type="number" id="drink1" min="0" value="0">
+            </div>
+            <div class="form-group">
+                <label for="drink2">Chinotto - $0.80</label>
+                <input type="number" id="drink2" min="0" value="0">
+            </div>
+            <div class="form-group">
+                <label for="drink3">Coca-Cola - $0.80</label>
+                <input type="number" id="drink3" min="0" value="0">
+            </div>
+            <div class="form-group">
+                <label for="drink4">Frescolita - $1.00</label>
+                <input type="number" id="drink4" min="0" value="0">
+            </div>
+            <div class="form-group">
+                <label for="drink5">Nestea - $0.50</label>
+                <input type="number" id="drink5" min="0" value="0">
+            </div>
+
+            <button type="button" onclick="generateInvoice()">Generar Factura</button>
+        </form>
+        <div class="total" id="total"></div>
+        <div class="invoice" id="invoice"></div>
+        <button id="downloadBtn" onclick="downloadPDF()" style="display:none;">Descargar PDF</button>
+        <button id="printBtn" onclick="printInvoice()" style="display:none;">Imprimir</button>
+        <button id="whatsappBtn" onclick="sendWhatsApp()" style="display:none;">Enviar por WhatsApp</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script>
+        const BCV_RATE = 30; // Tasa ficticia
+
+        function generateInvoice() {
+            const prices = {
+                combo1: 2.5,
+                combo2: 5.0,
+                combo3: 5.0,
+                combo4: 5.0,
+                ind1: 1.0,
+                ind2: 1.0,
+                ind3: 1.5,
+                ind4: 2.3,
+                ind5: 2.0,
+                drink1: 1.0,
+                drink2: 0.8,
+                drink3: 0.8,
+                drink4: 1.0,
+                drink5: 0.5
+            };
+
+            let total = 0;
+            let invoiceDetails = `<h2>Factura</h2>`;
+            const name = document.getElementById('name').value;
+            const id = document.getElementById('id').value;
+            const phone = document.getElementById('phone').value || "N/A";
+
+            invoiceDetails += `<p>Nombre y Apellido: ${name}</p>`;
+            invoiceDetails += `<p>Cédula: ${id}</p>`;
+            invoiceDetails += `<p>Teléfono: ${phone}</p>`;
+            invoiceDetails += '<h3>Detalles:</h3>';
+
+            for (let id in prices) {
+                const quantity = document.getElementById(id).value;
+                if (quantity > 0) {
+                    const price = prices[id];
+                    const subtotal = quantity * price;
+                    total += subtotal;
+                    invoiceDetails += `<p>${quantity} x ${document.querySelector(`label[for=${id}]`).innerText} - $${subtotal.toFixed(2)}</p>`;
+                }
+            }
+
+            const subtotal = total.toFixed(2);
+            const iva = (total * 0.16).toFixed(2);
+            const totalWithIva = (total * 1.16).toFixed(2);
+            const totalBolivares = (totalWithIva * BCV_RATE).toFixed(2);
+
+            document.getElementById('total').innerText = `Total: $${totalWithIva} / Bs. ${totalBolivares}`;
+            invoiceDetails += `<h3>Subtotal: $${subtotal}</h3>`;
+            invoiceDetails += `<h3>IVA (16%): $${iva}</h3>`;
+            invoiceDetails += `<h3>Total: $${totalWithIva} / Bs. ${totalBolivares}</h3>`;
+            invoiceDetails += `<p>Vuelva a la aplicación y Escriba método de pago.</p>`;
+            document.getElementById('invoice').innerHTML = invoiceDetails;
+
+            document.getElementById('downloadBtn').style.display = 'block';
+            document.getElementById('printBtn').style.display = 'block';
+            document.getElementById('whatsappBtn').style.display = 'block';
+        }
+
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const invoiceDetails = document.getElementById('invoice').innerHTML;
+            doc.fromHTML(invoiceDetails, 10, 10);
+            doc.save('factura.pdf');
+        }
+
+        function printInvoice() {
+            const printContent = document.getElementById('invoice').innerHTML;
+            const originalContent = document.body.innerHTML;
+            document.body.innerHTML = printContent;
+            window.print();
+            document.body.innerHTML = originalContent;
+        }
+
+        function sendWhatsApp() {
+            const phone = "04125316432";
+            const invoiceDetails = document.getElementById('invoice').innerText;
+            const url = `https://wa.me/${phone}?text=${encodeURIComponent(invoiceDetails)}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
